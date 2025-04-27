@@ -9,6 +9,8 @@ servers:
 paths:
   /snippets:
     post:
+      tags:
+        - snippets
       summary: create a new snippet
       operationId: createSnippet
       requestBody:
@@ -38,6 +40,8 @@ paths:
                 $ref: "#/components/schemas/Error"
   /snippets/{id}:
     get:
+      tags:
+        - snippets
       summary: Get a snippet
       description: Retrieve a snippet by its ID with optional password for protected snippets
       operationId: getSnippet
@@ -74,6 +78,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     put:
+      tags:
+        - snippets
       summary: Update a snippet
       description: Update an existing snippet using its ID and edit token
       operationId: updateSnippet
@@ -122,6 +128,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     delete:
+      tags:
+        - snippets
       summary: Delete a snippet
       description: Delete an existing snippet using its ID and edit token
       operationId: deleteSnippet
