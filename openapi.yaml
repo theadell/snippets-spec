@@ -1,0 +1,252 @@
+openapi: 3.1.0
+info:
+  title: Snippet Storage API
+  description: API for storing and retrieving text/code snippets
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /snippets:
+    post:
+      summary: create a new snippet
+      operationId: createSnippet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnippetCreateRequest"
+      responses:
+        "201":
+          description: Snippet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnippetCreateResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Content too large
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /snippets/{id}:
+    get:
+      summary: Get a snippet
+      description: Retrieve a snippet by its ID with optional password for protected snippets
+      operationId: getSnippet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Snippet ID
+          schema:
+            type: string
+        - name: X-Snippet-Password
+          in: header
+          required: false
+          description: Password for protected snippets
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Snippet retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnippetResponse"
+        "401":
+          description: Password required or invalid password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Snippet not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a snippet
+      description: Update an existing snippet using its ID and edit token
+      operationId: updateSnippet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Snippet ID
+          schema:
+            type: string
+        - name: X-Edit-Token
+          in: header
+          required: true
+          description: Edit token for updating the snippet
+          schema:
+            type: string
+        - name: X-Snippet-Password
+          in: header
+          required: false
+          description: Password for protected snippets
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnippetCreateRequest"
+      responses:
+        "200":
+          description: Snippet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnippetResponse"
+        "401":
+          description: Invalid edit token or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Snippet not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a snippet
+      description: Delete an existing snippet using its ID and edit token
+      operationId: deleteSnippet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Snippet ID
+          schema:
+            type: string
+        - name: X-Edit-Token
+          in: header
+          required: true
+          description: Edit token for deleting the snippet
+          schema:
+            type: string
+        - name: X-Snippet-Password
+          in: header
+          required: false
+          description: Password for protected snippets
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Snippet deleted successfully
+        "401":
+          description: Invalid edit token or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Snippet not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    SnippetCreateRequest:
+      type: object
+      required:
+        - content
+      properties:
+        title:
+          type: string
+          description: optional title for the snippet
+          minLength: 4
+        contentType:
+          type: string
+          description: optional content type
+        content:
+          type: string
+          description: The snippet content to store
+          minLength: 1
+        password:
+          type: string
+          description: Optional password for snippet protection
+          minLength: 8
+        expiresIn:
+          type: string
+          description: Optional duration after which the snippet will expire
+          example: 24h
+      additionalProperties: false
+
+    SnippetCreateResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the snippet
+        editToken:
+          type: string
+          description: secret token for editing snippet
+        expiresAt:
+          type: string
+          description: ISO 8601 timestamp when the snippet will expire (if applicable)
+          format: date-time
+      additionalProperties: false
+
+    SnippetResponse:
+      type: object
+      required:
+        - id
+        - content
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the snippet
+        content:
+          type: string
+          description: The decrypted snippet content
+        createdAt:
+          type: string
+          description: ISO 8601 timestamp when the snippet was created
+          format: date-time
+        expiresAt:
+          type: string
+          description: ISO 8601 timestamp when the snippet will expire (if applicable)
+          format: date-time
+      additionalProperties: false
+    Error:
+      type: object
+      required:
+        - status
+        - error
+        - message
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+        error:
+          type: string
+          description: Error type or category
+        message:
+          type: string
+          description: Detailed error message
+        path:
+          type: string
+          description: Request path that generated the error
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+      additionalProperties: false
