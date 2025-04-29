@@ -222,9 +222,15 @@ components:
         id:
           type: string
           description: Unique identifier for the snippet
+        title:
+          type: string
+          description: Title of the snippet
         content:
           type: string
           description: The decrypted snippet content
+        contentType:
+          type: string
+          description: Type of the content of the snippet
         createdAt:
           type: string
           description: ISO 8601 timestamp when the snippet was created
